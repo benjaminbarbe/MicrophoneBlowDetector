@@ -89,6 +89,7 @@
 }
 
 - (void)stop {
+    [levelTimer invalidate];
 #if __has_feature(objc_arc)
 #else
 	[levelTimer release];
