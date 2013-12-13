@@ -9,7 +9,7 @@
 
 #define DDMicBlowDetectorTimerSpeed 0.03
 #define DDMicBlowDetectorLowPassFilterAlpha 0.05
-#define DDMicBlowDetectorDefaultRequiredConfidence 0.95
+#define DDMicBlowDetectorDefaultRequiredConfidence 0.5
 
 @implementation DDMicBlowDetector {
 	AVAudioRecorder *recorder;
@@ -113,7 +113,7 @@
 	[recorder updateMeters];
     
     //apply filter and check for mic blow
-	double peakPowerForChannel = pow(10, (0.05 * [recorder peakPowerForChannel:0]));
+	double peakPowerForChannel = pow(10, (0.05 * [recorder averagePowerForChannel:0]));
 	lowPassResults = DDMicBlowDetectorLowPassFilterAlpha * peakPowerForChannel + (1.0 - DDMicBlowDetectorLowPassFilterAlpha) * lowPassResults;
 	BOOL micBlowDetected = lowPassResults > self.requiredConfidence;
     
