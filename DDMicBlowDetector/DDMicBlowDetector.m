@@ -7,9 +7,7 @@
 //
 #import "DDMicBlowDetector.h"
 
-#define DDMicBlowDetectorTimerSpeed 0.03
 #define DDMicBlowDetectorLowPassFilterAlpha 0.05
-#define DDMicBlowDetectorDefaultRequiredConfidence 0.5
 
 @implementation DDMicBlowDetector {
 	AVAudioRecorder *recorder;
@@ -72,6 +70,10 @@
                               AVNumberOfChannelsKey: @1,
                               AVEncoderAudioQualityKey: @(AVAudioQualityMax)};
     
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
+                        error:nil];
+    
     NSError *error = nil;
     recorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
     
@@ -116,12 +118,12 @@
     //apply filter and check for mic blow
 	double peakPowerForChannel = pow(10, (0.05 * [recorder averagePowerForChannel:0]));
 	lowPassResults = DDMicBlowDetectorLowPassFilterAlpha * peakPowerForChannel + (1.0 - DDMicBlowDetectorLowPassFilterAlpha) * lowPassResults;
-	BOOL micBlowDetected = lowPassResults > self.requiredConfidence;
+	BOOL micBlowDetected = lowPassResults > self.requiredConfidence || peakPowerForChannel > self.requiredConfidence;
     
     //decide on what notification to send (if any)
 	if (micBlowDetected) {
         BOOL startedBefore = latestDuration >= self.minDuration;
-
+        
         latestDuration += DDMicBlowDetectorTimerSpeed;
         noteDuration = latestDuration;
 
@@ -160,7 +162,7 @@
 #ifdef DEBUG
         NSLog(@"Sending: %@ %f", noteName, noteDuration);
 #endif
-        [[NSNotificationCenter defaultCenter] postNotificationName:noteName object:self userInfo:@{DDMicBlowDetectorDuration : @(noteDuration)}];
+        [[NSNotificationCenter defaultCenter] postNotificationName:noteName object:self userInfo:@{DDMicBlowDetectorDuration : @(noteDuration), @"averagePowerForChannel": @(lowPassResults)}];
     }
 }
 

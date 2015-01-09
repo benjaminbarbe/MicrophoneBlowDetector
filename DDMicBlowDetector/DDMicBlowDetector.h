@@ -9,6 +9,9 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
 
+#define DDMicBlowDetectorTimerSpeed 0.03
+#define DDMicBlowDetectorDefaultRequiredConfidence 0.5
+
 @interface DDMicBlowDetector : NSObject
 
 + (DDMicBlowDetector*)sharedDetector;
